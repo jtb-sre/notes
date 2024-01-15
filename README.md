@@ -4,6 +4,8 @@ This is my logbook for personal note taking.
 # Structure
 * [Diary](./diary/diary.md): Per day logbook of notes, mostly from ephemeral investigations and similar
 * [Career Notes](./career/README.md): Notes about current/previous jobs
+* [Config Files](./conf): Reasonably portable config files
+* [Scripts](./bin): scriptlets that can come with me
 
 # Useful Links
 * Third-Party Software:

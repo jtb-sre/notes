@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Custom aliases for convenience
+# Defining an alias for a command not installed isn't dangerous
+
+#
+# Technology-specific aliases
+#
+
+# Kubernetes Aliases!
+alias frk="flux reconcile kustomization --with-source"
+alias kubens="kubectl config set-context --current --namespace"
+alias kn="kubie ns"
+alias kx="kubie ctx"
+
+# Python aliases!
+alias pt='poetry run coverage run -m pytest -vvv && poetry run coverage report -m --omit="test*.py"'

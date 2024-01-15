@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Extra portable config. Not expected to be the top-level bash profile, but
+#     should be able to refer to this safely
+# Will attempt to link to portable aliases, if linked at ~/.bash_aliases_extra
+
+#
+# Set some common environment variables
+#
+
+# Editor preferences. Emacs editing mode is bash default but setting just in case
+set -o emacs
+export EDITOR="vim"
+export PAGER="less"
+
+# Locale settings
+export LANGUAGE="en_US:en"
+
+# GUI settings.
+export ANKI_NOHIGHDPI=1
+export GTK_IM_MODULE=ibus
+export XMODIFIERS=@im=ibus
+export QT_IM_MODULE=ibus
+
+# I want to keep plenty of history, but ignore commands that start with a space
+#     for occasions where a command has secrets
+export HISTFILESIZE=10000
+export HISTCONTROL="ignoredups:ignorespace"
+
+# Look for a python virtual environment, stuff stored by GUIs, local scripts,
+#     and Golang
+export GOPATH=~/go
+export PATH=~/venv/bin:~/.local/bin:~/bin:/usr/local/go/bin:$GOPATH/bin:$PATH
+
+# Import my custom aliases
+if [ -f ~/.bash_aliases_extra ]; then
+	. ~/.bash_aliases_extra
+else
+  echo "Can't import custom aliases. Ensure they're linked!"
+fi
