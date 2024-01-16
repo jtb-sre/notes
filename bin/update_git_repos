@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# Updates all of the git repositories in a folder, including pruning local branches.
+# Intended to be run as a cron job.
+
+set -euo pipefail
+
+help() {
+  echo "$0: Update git repositories."
+  echo "Syntax: $0 "
+  echo "  Arguments:"
+  echo "    [-d | --directory]: One directory to update. Need at least 1."
+  echo "                        Can be specified multiple times."
+  echo "    [-h | --help]: Output this message"
+}
+
+# Update a single git repository
+# Arguments:
+#   * Directory to update
+update_dir() {
+  local DIR="$1"
+  local START_DIR=$(pwd)
+
+  cd "$DIR" || exit 5
+  shopt -s globstar
+  for cur_dir in **/.git; do
+    echo "Updating git repo in $cur_dir"
+
+    # If it's a file, skip it
+    if [[ -f "${cur_dir}" ]]; then
+      continue
+    fi
+
+    cd "${cur_dir}/.." || exit 4
+    
+    # If you're not in a branch, go to the default. Seems finding the "real"
+    #   default is hard so I'm doing it an easy way
+    local BRANCH=$(git branch --show-current)
+    if [[ ${#BRANCH} -eq 0 ]]; then
+      # Upstream repo of the form remote/branch
+      local UPSTREAM_DEFAULT=$(git rev-parse --abbrev-ref origin/HEAD)
+      local LOCAL_DEFAULT=${UPSTREAM_DEFAULT##/}
+      git checkout  "$LOCAL_DEFAULT"
+    fi
+
+    git pull --all --prune
+    cd "${DIR}"
+  done
+
+  cd "$START_DIR"
+}
+
+main() {
+  # Parse & Handle Arguments
+  VERBOSE=0
+  UPDATE_DIRS=()
+  while [[ ${#@} -gt 0 ]]; do
+    case "$1" in
+      -d | --directory ) UPDATE_DIRS+=$2; shift 2;;
+      -h | --help ) help; exit 0;;
+      -v | --verbose ) VERBOSE=1; shift 1;;
+      \? ) echo "Invalid Argument!" >&2; help; exit 1;;
+    esac
+  done
+
+  if [[ "$VERBOSE" -eq "1" ]]; then
+    set -x
+  fi
+
+  if [[ ${#UPDATE_DIRS} -eq "0" ]]; then
+    echo "Need to update at least one directory!" 2>&1
+    exit 2
+  fi
+
+  GIT=$(which git)
+  GIT_RESULT=$?
+  if [[ "$GIT_RESULT" -ne "0" ]]; then
+    echo "Git executable missing! Exiting." 2>&1
+    exit 3
+  fi
+
+  # Arguments check out! Start updatin'
+  for directory in "${UPDATE_DIRS[@]}"; do
+    echo "Searching for git repositories in ${directory}..."
+    update_dir "$directory"
+  done
+
+  # Change back to starting directory
+  exit 0
+}
+
+main "$@"
