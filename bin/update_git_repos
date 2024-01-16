@@ -56,7 +56,7 @@ main() {
   UPDATE_DIRS=()
   while [[ ${#@} -gt 0 ]]; do
     case "$1" in
-      -d | --directory ) UPDATE_DIRS+=$2; shift 2;;
+      -d | --directory ) UPDATE_DIRS+=("$2"); shift 2;;
       -h | --help ) help; exit 0;;
       -v | --verbose ) VERBOSE=1; shift 1;;
       \? ) echo "Invalid Argument!" >&2; help; exit 1;;
