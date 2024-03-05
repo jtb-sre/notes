@@ -13,7 +13,7 @@ If you are unsure whether AD is going to authenticate with your CNAME, run `sudo
 
 In Active Directory Users and Computers (ADUC) on Windows:
 * Update the DNS record so that it points to the new desired primary
-* If the old primary is being powered down, use `realm leave`to un-join from AD
+* If the old primary is being powered down, use `realm leave` to un-join from AD
 * If the old primary is remaining up, remove the CNAME from ADUC, `Computers` or `Domain Member Servers`
 * When the CNAME has been replicated to all participating Domain Controllers, re-run a `kinit` on the host. 
 * You may need to leave and re-enter the domain?
