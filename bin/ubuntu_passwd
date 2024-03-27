@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Sets a password for the provided users
+# Using an initial password set of the bitlocker PIN.
+# Force password reset on first login
+# needs to be run as root
+
+USERS=()
+FORCE=0
+PASSWORD=""
+while [[ ${#@} -gt 0 ]]; do
+  case "$1" in
+    -f | --force) FORCE=1; shift;;
+    [[:digit:]]+) PASSWORD=$1; shift;;
+    *) USERS+=("$1"); shift;; 
+  esac
+done
+
+if [[ -z "$PASSWORD" ]]; then
+  echo "Enter a string for your starter password in the list of arguments. It is a set of digits." >2
+  exit 1
+fi
+
+for user in ${USERS[@]}; do
+  # Second element of passwd --status is NP if no password is set
+  STATUS=$(passwd --status $user | awk '{print $2}')
+
+  if [[ "$STATUS" == "NP" ]]; then
+    echo "Setting password for ${user}..."
+    echo "$PASSWORD" | passwd $user --stdin
+    passwd --expire $user
+  fi
+done
