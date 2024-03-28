@@ -5,29 +5,43 @@
 # Force password reset on first login
 # needs to be run as root
 
+set -euo pipefail
+
 USERS=()
 FORCE=0
 PASSWORD=""
+DEBUG=0
+shopt -s extglob # Need for checking for an int
 while [[ ${#@} -gt 0 ]]; do
   case "$1" in
     -f | --force) FORCE=1; shift;;
-    [[:digit:]]+) PASSWORD=$1; shift;;
+    -v | --verbose) DEBUG=1; shift;;
+    +([0-9])) PASSWORD=$1; shift;;
     *) USERS+=("$1"); shift;; 
   esac
 done
+shopt -u extglob
+
+if [[ $DEBUG -eq 1 ]]; then
+  set -x
+fi
 
 if [[ -z "$PASSWORD" ]]; then
-  echo "Enter a string for your starter password in the list of arguments. It is a set of digits." >2
+  echo "Enter a string for your starter password in the list of arguments. It is a set of digits."
   exit 1
 fi
 
+echo "User List: ${USERS[@]}"
+
 for user in ${USERS[@]}; do
+  echo "Operating on user: ${user}..."
   # Second element of passwd --status is NP if no password is set
   STATUS=$(passwd --status $user | awk '{print $2}')
 
-  if [[ "$STATUS" == "NP" ]]; then
+  if [[ "$STATUS" == "NP" ]] || [[ $FORCE -eq 1 ]]; then
     echo "Setting password for ${user}..."
-    echo "$PASSWORD" | passwd $user --stdin
+    # Send password twice with newline since passwd expects password repeated
+    echo -ne "$PASSWORD\n$PASSWORD" | passwd $user
     passwd --expire $user
   fi
 done

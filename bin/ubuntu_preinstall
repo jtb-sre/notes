@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# ubuntu_preinstall: Handle pre-installation set up of the dual boot laptops
+set -euxo pipefail
+
+function main() {
+
+}
+
+main "$@"

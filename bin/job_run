@@ -1,0 +1,73 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Wrapper script to facilitate running data science jobs via cron
+
+function print_usage() {
+  local usage="
+  job_run: Wrapper script for executing data science workflows
+
+  Usage: job_run -e file -s glob -x file [-r file]
+
+  Arguments:
+  -s | --semaphore:   Only run job if the glob pattern matches one or more files
+  -x | --execute:     Job script to execute
+  -r | --recipients:  File with email recipients for a successful report,
+                      one recipient on each line. Optional.
+  -a | --email-body:  File with the body of the email to deliver
+  -h | --help:        Print this usage guide
+  "
+  echo "$usage"
+}
+
+# Do some sanity checks before trying to proceed:
+#     * The required arguments (--semaphore, --environment, --execute)
+#           are specified
+#     * Verify that environment file exists and is readable
+#     * Verify that script file exists and is executable
+function validate_args() {
+  if [[ -z "${EXECUTE}" ]]; then
+    print_usage
+    echo "Please provide a script to run via -x" >&2
+    exit 2
+  fi
+  if [[ -n "${EMAIL_BODY}" && -z "${RECIPIENTS}" ]]; then
+    echo "You provided an email body, but no-one to send an email to!" >&2 
+    echo "Remove --email-body argument or add recipient file" >&2 
+    exit 3
+  fi
+  if [[ ! -x "${EXECUTE}" ]]; then
+    echo "${EXECUTE} is not executable! Please check permissions on the flie" >&2
+    exit 4
+  fi
+}
+
+function main() {
+  # Gather args
+  SEMAPHORE=""
+  ENVIRONMENT=""
+  RECIPIENTS=""
+  EXECUTE=""
+  EMAIL_BODY=""
+  CONFIG="/etc/wslh-job-runner.conf"
+  while [[ ${#@} -gt 0 ]]; do
+    case "$1" in
+      -s | --semaphore) SEMAPHORE="$2"; shift 2;;
+      -e | --environment) ENVIRONMENT="$2"; shift 2;;
+      -r | --recipients) RECIPIENTS="$2"; shift 2;;
+      -x | --execute) EXECUTE="$2"; shift 2;;
+      -a | --email-body) EMAIL_BODY="$2"; shift 2;;
+      -c | --config) CONFIG="$2"; shift 2;;
+      -h | --help) print_usage; exit 0;;
+    esac
+  done
+  
+  # Validate that you have everything you need for successful run
+  validate_args
+
+  # Use true builtin for now since we don't know what return code to expect
+  $(EXECUTE) || true
+}
+
+main "$@"
